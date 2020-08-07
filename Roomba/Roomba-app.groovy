@@ -1,6 +1,6 @@
 /**
  *
- * Hubitat Import URL: https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/Roomba-app.groovy
+ * Hubitat Import URL: https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-app.groovy
  *
  *  ****************  iRobot Scheduler  ****************
  *
@@ -9,7 +9,7 @@
  *  the name you gave your Roomba/Braava device in the cloud app.  With this app you can schedule multiple cleaning times, automate cleaning when presence is away, receive notifications about status
  *  of the Roomba/Braava (stuck, cleaning, died, etc) and also setup continous cleaning mode for non-900 series WiFi Roomba devices.
  *
- *  Copyright 2019 Aaron Ward
+ *  Copyright 2020 David Kilgore, Aaron Ward
  *
  *  Special thanks to Dominick Meglio for creating the initial integration and giving me permission to use his code to create this application.
  *
@@ -24,8 +24,6 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *
- * ------------------------------------------------------------------------------------------------------------------------------
- *              Donations are always appreciated: https://www.paypal.me/aaronmward
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
@@ -78,6 +76,7 @@ definition(
     author: "Aaron Ward",
     description: "Scheduling and local execution of iRobot services",
     category: "Misc",
+    importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-app.groovy"
     iconUrl: "",
     iconX2Url: "",
     iconX3Url: " ")
@@ -99,6 +98,8 @@ def mainPage() {
             if(state.roombaName==null || state.error) paragraph "<b><font color=red>Rest980 Server cannot be reached - check IP Address</b></font>"
 			input "doritaIP", "text", title: "Rest980 Server IP Address:", description: "Rest980 Server IP Address:", required: true, submitOnChange: true, width: 6
 			input "doritaPort", "number", title: "Rest980 Server Port:", description: "Dorita Port", required: true, defaultValue: 3000, width: 6
+            input "doritaUser", "text", title: "Rest980 Server Username:", description: "Rest980 Server Username:", width: 6
+            input "doritaPw", "password", title: "Rest980 Server Password:", description: "Rest980 Server Password:", width: 6
             if(state.roombaName!=null && state.roombaName.length() > 0) href "pageroombaInfo", title: "Information about my Roomba: ${state.roombaName}", description:""
 		}
         section(getFormat("header-blue", " Notification Device(s):")) {
@@ -113,6 +114,7 @@ def mainPage() {
                 input "pushoverDead", "bool", title: "Notify when Roomba's Battery dies?", required: false, defaultValue:false, submitOnChange: true, width: 6 
                 input "pushoverDock", "bool", title: "Notify when Roomba is docked and charging?", required: false, defaultValue:false, submitOnChange: true, width: 6
                 input "pushoverError", "bool", title: "Notify when Roomba has an error?", required: false, defaultValue:false, submitOnChange: true, width: 6
+                input "pushoverUnknown", "bool", title: "Notify when Roomba is in an unrecognized state?", required: false, defaultValue:false, submitOnChange: true, width: 6
                 href "pageroombaNotify", title: "Change default notification messages from ${state.roombaName}", description: ""
             }
         }
@@ -259,12 +261,26 @@ def mainPage() {
                 ]                 
                 input "roombaalwaysFinish", "bool", title: "Set Always Finish Option (On/Off):", defaultValue: false, submitOnChange: true                
             }
+            paragraph "<hr><u>Settings for Roomba i7/s9 series devices:</u>"
+            input "roombaI7", "bool", title: "Configure i7/s9 options?", defaultValue: false, submitOnChange: true
+            if(roombaI7){
+                input "roombaOrderedCleaning", "bool", title: "Enable Ordered Cleaning?", required: false, defaultValue: false, submitOnChange: true
+                input "roombaDefaultRooms", "text", title: "Input default rooms for cleaning", required: false, defaultValue: "", submitOnChange: true
+                input "roombaOn", "enum", title: "Do the following when Roomba's switch is turned 'On'?", defaultValue: "start", required: false, multiple: false, submitOnChange: true,
+                options: [
+                    "start": "Start",
+                    "cleanRoom": "CleanRoom"
+                ]
+            }
             paragraph "<hr><u>Settings for Braava devices:</u>"
             input "BraavaYes", "bool", title: "Start Braava(s) after iRobot is done cleaning?", required: false, defaultValue: false, submitOnChange: true
             if(BraavaYes) input "BraavaDevice", "capability.switch", title: "Select Braava robot(s) to turn on after iRobot docks:", required: false, multiple: true, defaultValue: null, submitOnChange: true
             
         }
-        
+        section(getFormat("header-blue", " Dashboard Options:")) { }
+            section() {
+                input "useLocalImages", "bool", title: "Use Local Images?", required: false, defaultValue: false, submitOnChange: true
+            }
         section(getFormat("header-blue", " Logging and Restrictions:")) { }   
             section() {
                 input "modesYes", "bool", title: "Enable restrictions?", required: true, defaultValue: false, submitOnChange: true
@@ -296,7 +312,6 @@ def mainPage() {
                     paragraph "<hr>state.schedDelay: ${state.schedDelay} - state.lastcleaning: ${state.lastcleaning} - state.presence: ${state.presence}<br>state.errors: ${state.errors} - state.prevcleaning: ${state.prevcleaning} - state.DaysSinceLastCleaning: ${state.DaysSinceLastCleaning}"
                 }
 				paragraph getFormat("line")
-				paragraph "<div style='color:#1A77C9;text-align:center'>Developed by: Aaron Ward<br/>v${version()}<br><br><a href='https://paypal.me/aaronmward?locale.x=en_US' target='_blank'><img src='https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg' border='0' alt='PayPal Logo'></a><br><br>Donations always appreciated!</div>"
 			}
 	}
 }
@@ -338,7 +353,8 @@ def pageroombaInfo() {
 		}
     if(result.data?.bin?.full) bin="Full"
     else bin="Empty"
-    img = "https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/support/${img}"
+    def path = getImagePath()
+    img = "${path}/${img}"
     temp = "<div><h2><img max-width=100% height=auto src=${img} border=0>&nbsp;&nbsp;${state.roombaName}</h2>"
     temp += "<p style=font-size:20px><b>Roomba SKU:</b> ${result.data.sku}</p>"
 	if (result.data.mac != null)
@@ -532,7 +548,7 @@ def RoombaSchedStart() {
                         if(roombaDelayDay) log.debug "Delay time has expired, skip cleaning is selected due to presence is home.  Current days since last cleaning: ${state.DaysSinceLastCleaning}"
                         else { 
                                 log.info "Delay time has expired.  Starting expired cleaning schedule"
-                                device.start()
+                                device.on()
                              }
                     }
                     updateDevices()
@@ -547,7 +563,7 @@ def RoombaSchedStart() {
     else { 
            if(debug) log.debug "RoombaDelay or Immediate Presence values false...starting Roomba normal cleaning schedule"
            if(logEnable) "Starting Roomba normal cleaning schedule" 
-           device.start()
+           device.on()
            updateDevices() 
            RoombaScheduler(false)
     }
@@ -763,7 +779,10 @@ def updateDevices() {
                     state.errors = false
                     if(pushoverStop) msg=state.pushoverStopMsg
                 }
-				break		
+				break	
+            default:
+                status = "unknown"
+                if(pushoverUnknown) msg="${state.roombaName} is in an unknown state:${result.data.cleanMissionStatus.phase}"
 		}
         if(debug) log.trace "Before: state.cleaning: '${state.cleaning}'  state.prevcleaning: '${state.prevcleaning}'  state.notified: '${state.notified}'"
         state.cleaning = status
@@ -856,7 +875,7 @@ def presenceHandler(evt) {
                 if(logEnable) log.info "RoombaPresenceDelay is true AND presence has departed."
                     state.schedDelay = false  
                     state.startDelayTime = null
-                    device.start() 
+                    device.on() 
                     RoombaScheduler(false) 
             }    
 
@@ -884,29 +903,23 @@ def handleDevice(device, id, evt) {
             break
         case "start":
             if(!restrict) {
-                if(device_result.data.cleanMissionStatus.phase.contains("run") || device_result.data.cleanMissionStatus.phase.contains("hmUsrDock") || device_result.data.batPct.toInteger()<roombaBatteryLevel.toInteger()) 
+                if(device_result.data.cleanMissionStatus.phase.contains("run") || device_result.data.cleanMissionStatus.phase.contains("hmUsrDock")) 
                     { log.warn "${device} was currently cleaning.  Scheduled times may be too close together." }
-                else {
-                    if(device_result.data.cleanMissionStatus.phase.contains("charge") && device_result.data.batPct.toInteger()>roombaBatteryLevel.toInteger()) {
-                        if(roomba900) {
-                            result = executeAction("/api/local/config/carpetBoost/${roombacarpetBoost}")
-                            if(roombaedgeClean) result = executeAction("/api/local/config/edgeClean/on")
-                                else result = executeAction("/api/local/config/edgeClean/off")
-                            result = executeAction("/api/local/config/cleaningPasses/${roombacleaningPasses}")
-                            if(roombaalwaysFinish) result = executeAction("/api/local/config/alwaysFinish/on")
-                                else result = executeAction("/api/local/config/alwaysFinish/off")
-                        }
-                        if(!device_result.data.cleanMissionStatus.phase.contains("run") || !device_result.data.cleanMissionStatus.phase.contains("hmUsrDock")) {
-                            result = executeAction("/api/local/action/start")
-                            setLastCycle()
-                        } else {
-                            result = executeAction("/api/local/action/pause")
-                            pauseExecution(1500)
-                            result = executeAction("/api/local/action/start")
-                            setLastCycle()
-                        }
-                    } else log.warn "${device} is currently not on the charging station.  Cannot start cleaning."
-                }
+                else if (device_result.data.batPct.toInteger()<roombaBatteryLevel.toInteger())
+                    { log.warn "${device} battery was too low to begin cleaning.  Scheduled times may be too close together." }
+                else if(device_result.data.cleanMissionStatus.phase.contains("charge")) {
+                    if(roomba900) {
+                        result = executeAction("/api/local/config/carpetBoost/${roombacarpetBoost}")
+                        if(roombaedgeClean) result = executeAction("/api/local/config/edgeClean/on")
+                            else result = executeAction("/api/local/config/edgeClean/off")
+                        result = executeAction("/api/local/config/cleaningPasses/${roombacleaningPasses}")
+                        if(roombaalwaysFinish) result = executeAction("/api/local/config/alwaysFinish/on")
+                            else result = executeAction("/api/local/config/alwaysFinish/off")
+                    } else {
+                        result = executeAction("/api/local/action/start")
+                        setLastCycle()
+                    }
+                } else log.warn "${device} is currently not on the charging station.  Cannot start cleaning."
             } else { if(device_result.data.cleanMissionStatus.phase.contains("run")) {
                          log.warn "Cleaning schedule for ${state.roombaName} is currently restricted.  Turn off '${restrictbySwitch.displayName}'"
                          if(pushoverRestrictions) pushNow("Current cleaning for ${state.roombaName} has been restricted.  Sending ${state.roombaName} to dock.")
@@ -915,6 +928,44 @@ def handleDevice(device, id, evt) {
                          result = executeAction("/api/local/action/dock")
                      } else if(pushoverRestrictions) pushNow("Cleaning schedule for ${state.roombaName} is currently restricted.  Turn off '${restrictbySwitch.displayName}' to resume cleaning schedule.")
             } 
+            break
+        case "cleanRoom":
+            if(!restrict) {
+                if (!roombaDefaultRooms || roombaDefaultRooms == "")
+                    { log.warn "${device} has no defined rooms to clean.  Use 'start' to clean all or define 'default rooms'." }
+                else if (device_result.data.cleanMissionStatus.phase.contains("run") || device_result.data.cleanMissionStatus.phase.contains("hmUsrDock")) 
+                    { log.warn "${device} was currently cleaning.  Scheduled times may be too close together." }
+                else if (device_result.data.batPct.toInteger()<roombaBatteryLevel.toInteger())
+                    { log.warn "${device} battery was too low to begin cleaning.  Scheduled times may be too close together." }
+                else if(device_result.data.cleanMissionStatus.phase.contains("charge")) {
+                    def rooms = [:]
+                    def defaultRooms = new JsonSlurper().parseText(roombaDefaultRooms)
+                    rooms.ordered = roombaOrderedCleaning ? 1 : 0
+                    rooms.regions = defaultRooms.regions
+                    if (defaultRooms.pmap_id && defaultRooms.user_pmapv_id) {
+                        rooms.pmap_id = defaultRooms.pmap_id
+                        rooms.user_pmapv_id = defaultRooms.user_pmapv_id
+                    } else if (device_result.data.pmaps.size() == 1) {
+                        if(logEnable) log.info "Using map ids from ${device} state"
+                        device_result.data.pmaps[0].each { 
+                            rooms.pmap_id = it.key
+                            rooms.user_pmapv_id = it.value
+                        }
+                    } else {
+                        log.warn "Cannot determine map ids to use -- not specified in default rooms and multiple maps exist."
+                        break
+                    }
+                    result = executePostAction("/api/local/action/cleanRoom", rooms)
+                    setLastCycle()
+                } else log.warn "${device} is currently not on the charging station.  Cannot start cleaning."
+            } else { if(device_result.data.cleanMissionStatus.phase.contains("run")) {
+                         log.warn "Cleaning schedule for ${state.roombaName} is currently restricted.  Turn off '${restrictbySwitch.displayName}'"
+                         if(pushoverRestrictions) pushNow("Current cleaning for ${state.roombaName} has been restricted.  Sending ${state.roombaName} to dock.")
+                         result = executeAction("/api/local/action/pause")
+                         pauseExecution(1500)
+                         result = executeAction("/api/local/action/dock")
+                     } else if(pushoverRestrictions) pushNow("Cleaning schedule for ${state.roombaName} is currently restricted.  Turn off '${restrictbySwitch.displayName}' to resume cleaning schedule.")
+            }
             break
         case "resume":
             result = executeAction("/api/local/action/resume")
@@ -933,18 +984,22 @@ def handleDevice(device, id, evt) {
             break
         case "off":
             if(roombaOff=="dock") {
-                    if(device_result.data.cleanMissionStatus.phase.contains("run") || device_result.data.cleanMissionStatus.phase.contains("hmUsrDock")) {
-                        result = executeAction("/api/local/action/pause")
-                        pauseExecution(1500)
-                        result = executeAction("/api/local/action/dock")
-                    } else {
-                        result = executeAction("/api/local/action/dock")
-                    }
-            } else result = executeAction("/api/local/action/stop")
-          break
+                device.dock()
+            } else {
+                device.stop()
+            }
+            break
+        case "on":
+            if(roombaOn=="start") {
+                device.start()
+            } else {
+                device.cleanRoom()
+            }
+            break
     }
     } 
     catch (e) { log.error "iRobot error.  Cannot start action. ${e}" }
+    updateDevices()
 }
 
 def setLastCycle() {
@@ -1027,7 +1082,10 @@ def executeAction(path) {
 	def params = [
         uri: "http://${doritaIP}:${doritaPort}",
         path: "${path}",
-		contentType: "application/json"
+		contentType: "application/json",
+        headers: [
+            authorization: authHeader()
+        ]
 	]
 	def result = null
 	try
@@ -1051,10 +1109,41 @@ def executeAction(path) {
 	return result
 }
 
+def executePostAction(path, Map reqBody) {
+    def params = [
+        uri: "http://${doritaIP}:${doritaPort}",
+        path: "${path}",
+		contentType: "application/json",
+        body: reqBody,
+        headers: [
+            authorization: authHeader()
+        ]
+	]
+	def result = null
+	try
+    {
+        httpPostJson(params) { resp ->
+			result = resp
+		}
+        state.error = false
+	}
+	catch (e) 
+	{
+        log.error "Rest980 Server not available: $e"
+        state.error = true
+    }
+    return result
+}
+
+def authHeader() {
+    return "Basic " + (doritaUser + ":" + doritaPw).bytes.encodeBase64()
+}
+
 //Application Handlers
 
 def getImage(type) {
-    def loc = "<img src='https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/support/roomba-clean.png'>"
+    def path = getImagePath()
+    def loc = "<img src='${path}/roomba-clean.png'>"
 }
 
 def getFormat(type, myText=""){
@@ -1065,6 +1154,13 @@ def getFormat(type, myText=""){
     
 }
 
+def getImagePath() {
+    if (useLocalImages) {
+        return "/local"
+    } else {
+        return "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/support"
+    }
+}
 
 def logsOff(){
     log.warn "Debug logging disabled."
@@ -1092,14 +1188,22 @@ def initialize() {
 
 }
 
+def obfuscate() {
+    def obfuscated = settings
+    obfuscated.doritaPw = "****"
+    return obfuscated
+}
+
 def installed() {
-	log.info "Installed with settings: ${settings}"
+    def logSettings = obfuscate()
+	log.info "Installed with settings: ${logSettings}"
     state.error=false
 	initialize()
 }
 
 def updated() {
-	log.info "Updated with settings: ${settings}"
+    def logSettings = obfuscate()
+	log.info "Updated with settings: ${logSettings}"
 	initialize()
 }
 
@@ -1113,5 +1217,6 @@ def uninstalled() {
 }
 
 //imports
+import groovy.json.JsonSlurper
 import groovy.time.TimeCategory
 import hubitat.helper.RMUtils

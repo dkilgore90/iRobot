@@ -1,5 +1,5 @@
 <h1>Roomba for Hubitat</h1><br>
-<p>Roomba for Hubitat is a forked version from the original author Dominick Meglio.  This forked version enables advanced scheduling, notification and 
+<p>Roomba for Hubitat is a forked version from the previous author Aaron Ward, which was forked from original author Dominick Meglio.  This forked version enables advanced scheduling, notification and 
 support for all WiFi enabled Roomba devices.</p>
 <br>
 <h2>Prerequisites and installation:</h2>
@@ -59,7 +59,7 @@ WantedBy=multi-user.target
 <ul>
   <li>Roomba Application install:
     <ul>
-      <li>Copy Roomba-app.groovy RAW URL: https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/Roomba-app.groovy
+      <li>Copy Roomba-app.groovy RAW URL: https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-app.groovy
       <li>In your Hubitat Administrative Console select Apps Code</li>
       <li>Click New App in upper right corner</li>
       <li>Click Import</li>
@@ -69,7 +69,7 @@ WantedBy=multi-user.target
   </li>
   <li>Roomba Device install:
     <ul>
-      <li>Copy Roomba-driver.groovy RAW URL: https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/Roomba-device.groovy
+      <li>Copy Roomba-driver.groovy RAW URL: https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy
       <li>In your Hubitat Administrative Console select Drivers Code</li>
       <li>Click New Driver in upper right corner</li>
       <li>Click Import</li>
@@ -81,7 +81,9 @@ WantedBy=multi-user.target
 
 <b>Roomba for Hubitat Configuration:</b>
 <ul>
-  <li>Rest980/Dorita980 Integration:<ul><li>Rest980 Server IP Address - IP Address running Rest980 and Dorita980</li></ul></li>
+  <li>Rest980/Dorita980 Integration:<ul><li>Rest980 Server IP Address - IP Address running Rest980 and Dorita980</li>
+    <li>Rest980 Server Port - Port running Rest980</li>
+    <li>Rest980 Server Username/Password (Optional) - Username/Password set for Basic Auth in Rest980</ul></li>
   <li>Notification Device(s):<ul><li>Pushover Device - select one to many devices to send notification to and Roomba's start/stop/pause/resume and dock status</li></ul></li>
   <li>Cleaning Schedule:<ul><li>Select days to schedule cleaning - Sunday - Saturday</li>
     <li>Number of times per day to clean - this can be between 1-10 times to clean in a single day</li>

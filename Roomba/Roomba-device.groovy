@@ -1,6 +1,6 @@
 /**
  *
- * Hubitat Import URL: https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/Roomba-device.groovy
+ * Hubitat Import URL: https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy
  *
  *  ****************  Roomba Device  ****************
  *
@@ -9,7 +9,7 @@
  *  the name you gave your Roomba device in the cloud app.  With this app you can schedule multiple cleaning times, automate cleaning when presence is away, receive notifications about status
  *  of the Roomba (stuck, cleaning, died, etc) and also setup continous cleaning mode for non-900 series WiFi Roomba devices.
  *
- *  Copyright 2019 Aaron Ward
+ *  Copyright 2020 David Kilgore, Aaron Ward
  *
  *  Special thanks to Dominick Meglio for creating the initial integration and giving me permission to use his code to create this application.
  *  
@@ -26,8 +26,6 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *
- * ------------------------------------------------------------------------------------------------------------------------------
- *              Donations are always appreciated: https://www.paypal.me/aaronmward
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
@@ -51,7 +49,7 @@
  *   1.0.0 - Inital concept from Dominick Meglio
 **/
 metadata {
-    definition (name: "Roomba", namespace: "roomba", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/Roomba-device.groovy") {
+    definition (name: "Roomba", namespace: "roomba", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy") {
 		capability "Battery"
 		capability "Actuator"
         capability "Switch"
@@ -65,6 +63,7 @@ metadata {
         command "pause"
         command "resume"
         command "dock"
+        command "cleanRoom"
     }
     preferences() {
         input("logEnable", "bool", title: "Enable logging", required: true, defaultValue: true)
@@ -95,7 +94,7 @@ def pause() {
 def resume() {
     parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "resume")
     if(logEnable) log.debug "Roomba is resuming through driver"
-    sendEvent(name: "switch", value: "off", isStateChange: true)
+    sendEvent(name: "switch", value: "on", isStateChange: true)
 }
 
 def dock() {
@@ -104,9 +103,18 @@ def dock() {
     sendEvent(name: "switch", value: "off", isStateChange: true)
 }
 
+def cleanRoom() {
+    parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "cleanRoom")
+    if(logEnable) log.debug "Roomba is cleaning selected rooms through driver"
+    def date = new Date()
+    def sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa")
+    sendEvent(name: "switch", value: "on", isStateChange: true)
+    sendEvent(name: "Last Activity", value: sdf.format(date), isStateChange: true) 
+}
+
 def on() {
-    parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "start")
-    if(logEnable) log.debug "Roomba is being started through driver"
+    parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "on")
+    if(logEnable) log.debug "Roomba on initiated through driver"
     sendEvent(name: "switch", value: "on", isStateChange: true)
 }
 
@@ -177,13 +185,18 @@ def roombaTile(cleaning, batterylevel, cleaningTime) {
             msg = cleaning.capitalize()
             sendEvent(name: "switch", value: "off", isStateChange: true)
             break
+        case "unknown":
+            img = "roomba-unknown.png"
+            msg = "Status Unknown"
+            break
         default:
             img = "roomba-stop.png"
             msg=cleaning.capitalize()
             sendEvent(name: "switch", value: "off", isStateChange: true)
             break
     }
-    img = "https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/support/${img}"
+    def path = parent.getImagePath()
+    img = "${path}/${img}"
     html = "<center><img width=70px height=70px vspace=5px src=${img}><br><font style='font-size:13px'>"
         if(cleaning.contains("docking") || cleaning.contains("cleaning")) html +="${msg} - ${cleaningTime}min<br>Battery: ${batterylevel}%"
         else html+="${msg}<br>Battery: ${batterylevel}%"
