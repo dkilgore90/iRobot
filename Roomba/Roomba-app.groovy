@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.3.7 - add cleanRooms functionality, and associated options for i7/s9 devices.  Add option to use local files for dashboard tiles
  *   1.3.6 - misc fixes
  *   1.3.5 - fixed spelling of "Braava" not "Brava". Added a setting to use a switch to override presence settings (great for a global pandemic!)
  *   1.3.4 - removed AppWatchDog, added last cleaning visibility, added ability to start a Braava device after successful docking/charging
