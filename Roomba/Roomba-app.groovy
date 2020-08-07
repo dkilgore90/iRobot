@@ -76,6 +76,7 @@ definition(
     author: "Aaron Ward",
     description: "Scheduling and local execution of iRobot services",
     category: "Misc",
+    importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-app.groovy"
     iconUrl: "",
     iconX2Url: "",
     iconX3Url: " ")

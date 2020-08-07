@@ -49,7 +49,7 @@
  *   1.0.0 - Inital concept from Dominick Meglio
 **/
 metadata {
-    definition (name: "Roomba", namespace: "roomba", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/PrayerfulDrop/Hubitat/master/Roomba/Roomba-device.groovy") {
+    definition (name: "Roomba", namespace: "roomba", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy") {
 		capability "Battery"
 		capability "Actuator"
         capability "Switch"
