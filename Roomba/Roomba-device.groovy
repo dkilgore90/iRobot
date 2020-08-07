@@ -30,6 +30,7 @@
  *
  *  Changes:
  * 
+ *   1.1.7 - add cleanRoom command and option to use local files for dashboard tiles
  *   1.1.6 - fixed CSS layout for smartly dashboards
  *   1.1.5 - removed AppWatchDog
  *   1.1.4 - Roomba driver backup of failed application scheduled events
