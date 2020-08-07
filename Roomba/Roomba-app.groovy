@@ -113,7 +113,7 @@ def mainPage() {
                 input "pushoverDead", "bool", title: "Notify when Roomba's Battery dies?", required: false, defaultValue:false, submitOnChange: true, width: 6 
                 input "pushoverDock", "bool", title: "Notify when Roomba is docked and charging?", required: false, defaultValue:false, submitOnChange: true, width: 6
                 input "pushoverError", "bool", title: "Notify when Roomba has an error?", required: false, defaultValue:false, submitOnChange: true, width: 6
-                input "pushoverUnknown", "bool", title: "Notify when Roomba is in an unrecognized state?", required: false, defaultValue:false, submitOnChange, true, width: 6
+                input "pushoverUnknown", "bool", title: "Notify when Roomba is in an unrecognized state?", required: false, defaultValue:false, submitOnChange: true, width: 6
                 href "pageroombaNotify", title: "Change default notification messages from ${state.roombaName}", description: ""
             }
         }
@@ -279,6 +279,7 @@ def mainPage() {
         section(getFormat("header-blue", " Dashboard Options:")) { }
             section() {
                 input "useLocalImages", "bool", title: "Use Local Images?", required: false, defaultValue: false, submitOnChange: true
+            }
         section(getFormat("header-blue", " Logging and Restrictions:")) { }   
             section() {
                 input "modesYes", "bool", title: "Enable restrictions?", required: true, defaultValue: false, submitOnChange: true
@@ -780,7 +781,7 @@ def updateDevices() {
 				break	
             default:
                 status = "unknown"
-                if(pushoverUnknown) msg="${state.roombaName} is in an unknown state:${result.data.cleanMissionStatus.phase}
+                if(pushoverUnknown) msg="${state.roombaName} is in an unknown state:${result.data.cleanMissionStatus.phase}"
 		}
         if(debug) log.trace "Before: state.cleaning: '${state.cleaning}'  state.prevcleaning: '${state.prevcleaning}'  state.notified: '${state.notified}'"
         state.cleaning = status
