@@ -347,6 +347,10 @@ def pageroombaInfo() {
             img = "roomba-error.png"
             msg = state.cleaning.capitalize()
             break
+        case "unknown":
+            img = "roomba-unknown.png"
+            msg = "Status Unknown"
+            break
         case "idle":
             img = "roomba-stop.png"
             msg = state.cleaning.capitalize()
@@ -384,7 +388,7 @@ def pageroombaInfo() {
         section(getFormat("header-blue", " Device Information:")) {
             paragraph temp
             paragraph getFormat("line")
-		    paragraph "<div style='color:#1A77C9;text-align:center'>Developed by: Aaron Ward<br/>v${version()}<br><br><a href='https://paypal.me/aaronmward?locale.x=en_US' target='_blank'><img src='https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg' border='0' alt='PayPal Logo'></a><br><br>Donations always appreciated!</div>"
+		    paragraph "<div style='color:#1A77C9;text-align:center'>Developed by: Aaron Ward<br/>v${version()}</div>"
         }
     }
 }
@@ -780,7 +784,10 @@ def updateDevices() {
                     state.errors = false
                     if(pushoverStop) msg=state.pushoverStopMsg
                 }
-				break	
+				break
+            case "evac":
+                //no-op case to avoid sending "unknown" status notification
+                break
             default:
                 status = "unknown"
                 if(pushoverUnknown) msg="${state.roombaName} is in an unknown state:${result.data.cleanMissionStatus.phase}"
@@ -893,7 +900,7 @@ def getContacts() {
     return contacts
 }
 
-def handleDevice(device, id, evt) {
+def handleDevice(device, id, evt, inputRooms=[:]) {
     try {
     def restrict = (modesYes && ((restrictbySwitch !=null && restrictbySwitch.currentState("switch").value == "on") || (restrictbyContact !=null && getContacts())) ) ? true : false
     def device_result = executeAction("/api/local/info/state")
@@ -942,7 +949,7 @@ def handleDevice(device, id, evt) {
                     def rooms = [:]
                     def defaultRooms = new JsonSlurper().parseText(roombaDefaultRooms)
                     rooms.ordered = roombaOrderedCleaning ? 1 : 0
-                    rooms.regions = defaultRooms.regions
+                    rooms.regions = inputRooms.regions ?: defaultRooms.regions
                     if (defaultRooms.pmap_id && defaultRooms.user_pmapv_id) {
                         rooms.pmap_id = defaultRooms.pmap_id
                         rooms.user_pmapv_id = defaultRooms.user_pmapv_id

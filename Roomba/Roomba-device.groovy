@@ -64,7 +64,7 @@ metadata {
         command "pause"
         command "resume"
         command "dock"
-        command "cleanRoom"
+        command "cleanRoom", [[name: "Regions", type: "JSON_OBJECT"]]
     }
     preferences() {
         input("logEnable", "bool", title: "Enable logging", required: true, defaultValue: true)
@@ -104,8 +104,9 @@ def dock() {
     sendEvent(name: "switch", value: "off", isStateChange: true)
 }
 
-def cleanRoom() {
-    parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "cleanRoom")
+def cleanRoom(regions='{}') {
+    def inputRooms = new JsonSlurper().parseText(regions)
+    parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "cleanRoom", inputRooms)
     if(logEnable) log.debug "Roomba is cleaning selected rooms through driver"
     def date = new Date()
     def sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa")
@@ -206,4 +207,5 @@ def roombaTile(cleaning, batterylevel, cleaningTime) {
     if(logEnable) log.debug "Roomba Status of '${msg}' sent to dashboard"
 }
 
+import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
