@@ -277,6 +277,8 @@ def mainPage() {
             input "BraavaYes", "bool", title: "Start Braava(s) after iRobot is done cleaning?", required: false, defaultValue: false, submitOnChange: true
             if(BraavaYes) input "BraavaDevice", "capability.switch", title: "Select Braava robot(s) to turn on after iRobot docks:", required: false, multiple: true, defaultValue: null, submitOnChange: true
             
+            paragraph "<hr><u>HE Debounce:</u>"
+            input "debounce", "bool", title: "Debounce status changes?", required: false, defaultValue: false, submitOnChange: true
         }
         section(getFormat("header-blue", " Dashboard Options:")) { }
             section() {
@@ -455,53 +457,53 @@ def RoombaScheduler(delayday) {
     // Check if we clean today
     if(delayday) {
         tempday = day
-         while(!foundschedule) {
-             tempday = tempday + 1
-             if(tempday>7) { tempday=1 }
-             if(!restricteddaysofweek.contains(tempday.toString())) { 
-                 foundschedule=true
-                 cleaningday = map2[tempday]
-                 weekday = map[tempday]
-             }
-         }        
+        while(!foundschedule) {
+            tempday = tempday + 1
+            if(tempday>7) { tempday=1 }
+            if(!restricteddaysofweek.contains(tempday.toString())) { 
+                foundschedule=true
+                cleaningday = map2[tempday]
+                weekday = map[tempday]
+            }
+        }
     }
         
     if(daysofweek.contains(day.toString()) && !foundschedule) { 
         // Check when next scheduled cleaning time will be
-            for(it in state.roombaSchedule) {
-                if((it > current) && !foundschedule) {
-                    nextcleaning = it
-                    cleaningday = "*"
-                    weekday = "Today"
-                    foundschedule=true
-                }
+        for(it in state.roombaSchedule) {
+            if((it > current) && !foundschedule) {
+                nextcleaning = it
+                cleaningday = "*"
+                weekday = "Today"
+                foundschedule=true
             }
+        }
         
         if(!foundschedule) {
-             tempday = day
-             while(!foundschedule) {
-                 tempday = tempday + 1
-                 if(tempday>7) { tempday=1 }
-                 if(daysofweek.contains(tempday.toString())) { 
-                     foundschedule=true
-                     cleaningday = map2[tempday]
-                     weekday = map[tempday]
-                 }
-             }
+            tempday = day
+            while(!foundschedule) {
+                tempday = tempday + 1
+                if(tempday>7) { tempday=1 }
+                if(daysofweek.contains(tempday.toString())) { 
+                    foundschedule=true
+                    cleaningday = map2[tempday]
+                    weekday = map[tempday]
+                }
+            }
         }
-      } else { 
+    } else { 
         // Check when the next day we are cleaning
         tempday = day
-         while(!foundschedule) {
-             tempday = tempday + 1
-             if(tempday>7) { tempday=1 }
-             if(daysofweek.contains(tempday.toString())) { 
-                 foundschedule=true
-                 cleaningday = map2[tempday]
-                 weekday = map[tempday]
-             }
-         }
+        while(!foundschedule) {
+            tempday = tempday + 1
+            if(tempday>7) { tempday=1 }
+            if(daysofweek.contains(tempday.toString())) { 
+                foundschedule=true
+                cleaningday = map2[tempday]
+                weekday = map[tempday]
+            }
         }
+    }
     log.info "Next scheduled cleaning: ${weekday} at ${Date.parse("HH:mm", nextcleaning).format('h:mm a')}" 
     schedule("0 ${Date.parse("HH:mm", nextcleaning).format('mm H')} ? * ${cleaningday} *", RoombaSchedStart) 
 }
@@ -552,9 +554,9 @@ def RoombaSchedStart() {
                         RoombaScheduler(false)
                         if(roombaDelayDay) log.debug "Delay time has expired, skip cleaning is selected due to presence is home.  Current days since last cleaning: ${state.DaysSinceLastCleaning}"
                         else { 
-                                log.info "Delay time has expired.  Starting expired cleaning schedule"
-                                device.on()
-                             }
+                            log.info "Delay time has expired.  Starting expired cleaning schedule"
+                            device.on()
+                        }
                     }
                     updateDevices()
                     state.schedDelay = false
@@ -563,14 +565,12 @@ def RoombaSchedStart() {
                 }
             }
         }
-    } 
-    // Delay cleaning is not selected
-    else { 
-           if(debug) log.debug "RoombaDelay or Immediate Presence values false...starting Roomba normal cleaning schedule"
-           if(logEnable) "Starting Roomba normal cleaning schedule" 
-           device.on()
-           updateDevices() 
-           RoombaScheduler(false)
+    } else { // Delay cleaning is not selected
+        if(debug) log.debug "RoombaDelay or Immediate Presence values false...starting Roomba normal cleaning schedule"
+        if(logEnable) "Starting Roomba normal cleaning schedule" 
+        device.on()
+        updateDevices() 
+        RoombaScheduler(false)
     }
 }
 
@@ -582,242 +582,252 @@ def RoombaDelay() {
 // Device creation and status updhandlers
 def createChildDevices() {
     try {
-    def result = executeAction("/api/local/info/state")
+        def result = executeAction("/api/local/info/state")
 
-	if (result && result.data)
-    {
-        if (!getChildDevice("roomba:"+result.data.name))
-            addChildDevice("roomba", "Roomba", "roomba:" + result.data.name, 1234, ["name": result.data.name, isComponent: false])
+	    if (result && result.data) {
+            if (!getChildDevice("roomba:"+result.data.name)) {
+                addChildDevice("roomba", "Roomba", "roomba:" + result.data.name, 1234, ["name": result.data.name, isComponent: false])
+            }
+        }
+    } catch (e) {
+        log.error "Couldn't create child device due to connection issue."
     }
-    }
-    catch (e) {log.error "Couldn't create child device due to connection issue." }
 }
 
-def cleanupChildDevices()
-{
+def cleanupChildDevices() {
     try {
-    def result = executeAction("/api/local/info/state")
-	for (device in getChildDevices())
-	{
-		def deviceId = device.deviceNetworkId.replace("roomba:","")
+        def result = executeAction("/api/local/info/state")
+	    for (device in getChildDevices()) {
+		    def deviceId = device.deviceNetworkId.replace("roomba:","")
 		
-        if (result.data.name != deviceId)
-            deleteChildDevice(device.deviceNetworkId)
-	}
+            if (result.data.name != deviceId) {
+                deleteChildDevice(device.deviceNetworkId)
+	        }
+        }
+    } catch (e) {
+        log.error "Couldn't clean up child devices due to connection issue."
     }
-    catch (e) { log.error "Couldn't clean up child devices due to connection issue."}
 }
 
-def updateDevices() {
+def updateDevices(recheck=false) {
     try {
-    def result = executeAction("/api/local/info/state")
+        def result = executeAction("/api/local/info/state")
     
-    if (result && result.data)
-    {
-        def device = getChildDevice("roomba:" + result.data.name)
-        
-        device.sendEvent(name: "battery", value: result.data.batPct)
-		if (result.data.bin != null)
-		{
-			if (!result.data.bin.present) device.sendEvent(name: "bin", value: "missing")
-			if (result.data.bin.full) {
-				device.sendEvent(name: "bin", value: "full")
-				if(pushoverBin && state.sendBinNotification) {
-					state.sendBinNotification = false
-					pushNow(state.pushoverBinMsg)
-				}
-			} else {
-				device.sendEvent(name: "bin", value: "good")
-				state.sendBinNotification = true
-			}
-		}
-		else if (result.data.tankLvl != null)
-		{
-			if (result.data.detectedPad.contains("Wet"))
-			{			
-				if (!result.data.mopReady.tankPresent) 
-					device.sendEvent(name: "tank", value: "missing")
-				else if (result.data.tankLvl == 0) {
-					device.sendEvent(name: "tank", value: "empty")
-					if(pushoverTank && state.sendTankNotification) {
-						state.sendTankNotification = false
-						pushNow(state.pushoverTankMsg)
-					}
-				}
-				else {
-					device.sendEvent(name: "tank", value: "good")
-					state.sendTankNotification = true
-				}
-			}
-		}
-        
-		def status = state.prevcleaning
-        def msg = null
-		switch (result.data.cleanMissionStatus.phase){
+        if (result && result.data) {
+            def device = getChildDevice("roomba:" + result.data.name)
+    
+            device.sendEvent(name: "battery", value: result.data.batPct)
+	    	if (result.data.bin != null) {
+			    if (!result.data.bin.present) device.sendEvent(name: "bin", value: "missing")
+			    if (result.data.bin.full) {
+    				device.sendEvent(name: "bin", value: "full")
+	    			if(pushoverBin && state.sendBinNotification) {
+		    			state.sendBinNotification = false
+			    		pushNow(state.pushoverBinMsg)
+				    }
+    			} else {
+	    			device.sendEvent(name: "bin", value: "good")
+		    		state.sendBinNotification = true
+			    }
+    		} else if (result.data.tankLvl != null) {
+			    if (result.data.detectedPad.contains("Wet")) {			
+				    if (!result.data.mopReady.tankPresent)  {
+					    device.sendEvent(name: "tank", value: "missing")
+				    } else if (result.data.tankLvl == 0) {
+					    device.sendEvent(name: "tank", value: "empty")
+					    if(pushoverTank && state.sendTankNotification) {
+						    state.sendTankNotification = false
+						    pushNow(state.pushoverTankMsg)
+					    }
+				    } else {
+					    device.sendEvent(name: "tank", value: "good")
+					    state.sendTankNotification = true
+				    }
+			    }
+		    }
+
+    		def status = state.prevcleaning
+            def msg = null
+		    switch (result.data.cleanMissionStatus.phase) {
 			case "hmMidMsn":
 			case "hmPostMsn":
 			case "hmUsrDock":  
-                    if(result.data.batPct == 0) {
-                        if(state.batterydead==false) {
-   		                        def now = new Date()
-                                long temp = now.getTime()
-                                state.starttime = temp
-                                state.batterydead = true
-                                status = "docking"
-                        } else {
-                            	long timeDiff
-   		                        def now = new Date()
-    	                        long unxNow = now.getTime()
-    	                        unxPrev = state.starttime
-    	                        unxNow = unxNow/1000
-    	                        unxPrev = unxPrev/1000
-    	                        timeDiff = Math.abs(unxNow-unxPrev)
-    	                        timeDiff = Math.round(timeDiff/60)
-                                if(logEnable) log.debug "Checking how long since battery was at 0%.  Time difference is currently: ${timeDiff.toString()} minute(s)"
-                                if(timeDiff > 10) {
-                                    status = "dead"
-                                    if(pushoverDead) msg=state.pushoverDeadMsg
-                                 } else {
-                                    status = "docking"                        
-                                }
-                        }
+                if(result.data.batPct == 0) {
+                    if(state.batterydead==false) {
+   	                    def now = new Date()
+                        long temp = now.getTime()
+                        state.starttime = temp
+                        state.batterydead = true
+                        status = "docking"
                     } else {
-    	                status = "docking"                        
-                        state.batterydead = false
-                        state.errors = false
+                    	long timeDiff
+   	                    def now = new Date()
+    	                long unxNow = now.getTime()
+    	                unxPrev = state.starttime
+    	                unxNow = unxNow/1000
+                        unxPrev = unxPrev/1000
+    	                timeDiff = Math.abs(unxNow-unxPrev)
+    	                timeDiff = Math.round(timeDiff/60)
+                        if(logEnable) log.debug "Checking how long since battery was at 0%.  Time difference is currently: ${timeDiff.toString()} minute(s)"
+                        if(timeDiff > 10) {
+                            status = "dead"
+                            if(pushoverDead) msg=state.pushoverDeadMsg
+                         } else {
+                            status = "docking"                        
+                        }
+                    }
+                } else {
+    	            status = "docking"                        
+                    state.batterydead = false
+                    state.errors = false
                 }      
-				break
-			case "charge":
-				status = "charging"
+			    break
+		    case "charge":
+			    status = "charging"
                 if(pushoverDock) msg=state.pushoverDockMsg
                 state.batterydead = false 
                 state.errors = false
                 if(!state.docked) {
                     if(BraavaYes) BraavaDevice.on()
                     state.docked = true             
-                 }
+                }
                 // working on
                 long daystimeDiff = 0                
-   		        def daynow = new Date()
+      		    def daynow = new Date()
 	            long dayunxNow = daynow.getTime()
-    	        dayunxPrev = state.lastcleaning
-    	        dayunxNow = dayunxNow/1000/60/60/24
-    	        dayunxPrev = dayunxPrev/1000/60/60/24
-    	        daytimeDiff = Math.abs(dayunxNow-dayunxPrev)
+                dayunxPrev = state.lastcleaning
+	            dayunxNow = dayunxNow/1000/60/60/24
+        	    dayunxPrev = dayunxPrev/1000/60/60/24
+        	    daytimeDiff = Math.abs(dayunxNow-dayunxPrev)
                 daytimeDiff = daytimeDiff.trunc()
-    	        daytimeDiff = Math.round(daytimeDiff)
+	            daytimeDiff = Math.round(daytimeDiff)
                 state.DaysSinceLastCleaning = daytimeDiff    
-				break
-			case "run":
+	    		break
+		    case "run":
                 state.docked=false
-				status = "cleaning"
+    			status = "cleaning"
                 if(pushoverStart) msg=state.pushoverStartMsg
                 state.batterydead = false
                 //control Roomba docking based on Time or Battery %
                 if(useTime && roombaTime.toInteger() >= result.data.cleanMissionStatus.mssnM.toInteger()) {
-                        device.dock()
+                    device.dock()
                 }
                 if(useBattery && roombaBattery.toInteger() >= result.data.batPct.toInteger()) {
-                        device.dock()
+                    device.dock()
                 }     
                 state.errors = false
-				break
-			case "stop":
+	    		break
+		    case "stop":
                 status = state.prevcleaning
                 if(result.data.cleanMissionStatus.notReady.toInteger() > 0) {
                     if(state.errors==false && state.notified==false) {
-   		                        def errornow = new Date()
-                                long errortemp = errornow.getTime()
-                                state.errorstarttime = errortemp
-                                state.errors = true
+                        def errornow = new Date()
+                        long errortemp = errornow.getTime()
+                        state.errorstarttime = errortemp
+                        state.errors = true
                         if(logEnable) log.warn "Detected possible cleaning error with ${state.roombaName}"
-                        } else {
-                            if(!state.cleaning.contains("error") && state.errors) {
-                            	long errortimeDiff = 0
-   		                        def errornow = new Date()
-    	                        long errorunxNow = errornow.getTime()
-    	                        errorunxPrev = state.errorstarttime
-    	                        errorunxNow = errorunxNow/1000
-    	                        errorunxPrev = errorunxPrev/1000
-    	                        errortimeDiff = Math.abs(errorunxNow-errorunxPrev)
-    	                        errortimeDiff = Math.round(errortimeDiff/60)
-                                if(logEnable) log.warn "Checking how long since error detected.  Time difference is currently: ${errortimeDiff.toString()} minute(s)"
-                                if(errortimeDiff > 5) status = "error"
-                            }
-                   }
-                   if(status.contains("error")) {
-                       temp = state.pushoverErrorMsg
-                       switch(result.data.cleanMissionStatus.notReady) {
-                           case "2":
-                               temp += " ${state.pushoverErrorMsg2}"
-                               break
-                           case "3":
-                               temp += " ${state.pushoverErrorMsg3}"
-                               break
-                           case "4":
-                               temp += " ${state.pushoverErrorMsg4}"
-                               break
-                           case "5":
-                               temp += "${stat.pushoverErrorMsg5}"
-                               break
-                           case "7":
-                               temp += " ${state.pushoverErrorMsg7}"
-                               break
-                           case "8":
-                               temp += " has a bin error.  Attempting to restart cleaning."
-                               device.resume
-                               pauseExecution(5000)
-                               device.resume
-                               break
-                           case "16":
-                               temp += " ${state.pushoverErrorMsg16}"
-                               break
-                          default:
-                                temp = "${state.roombaName} has an unknown error notReady:${result.data.cleanMissionStatus.notReady}"
-                                break
-                       }
-                       if(pushoverError) msg = temp
-                       status = "error"
+                    } else {
+                        if(!state.cleaning.contains("error") && state.errors) {
+                        	long errortimeDiff = 0
+   		                    def errornow = new Date()
+    	                    long errorunxNow = errornow.getTime()
+    	                    errorunxPrev = state.errorstarttime
+                            errorunxNow = errorunxNow/1000
+        	                errorunxPrev = errorunxPrev/1000
+    	                    errortimeDiff = Math.abs(errorunxNow-errorunxPrev)
+    	                    errortimeDiff = Math.round(errortimeDiff/60)
+                            if(logEnable) log.warn "Checking how long since error detected.  Time difference is currently: ${errortimeDiff.toString()} minute(s)"
+                            if(errortimeDiff > 5) status = "error"
+                        }
+                    }
+                    if(status.contains("error")) {
+                        temp = state.pushoverErrorMsg
+                        switch(result.data.cleanMissionStatus.notReady) {
+                        case "2":
+                            temp += " ${state.pushoverErrorMsg2}"
+                            break
+                        case "3":
+                            temp += " ${state.pushoverErrorMsg3}"
+                            break
+                        case "4":
+                            temp += " ${state.pushoverErrorMsg4}"
+                            break
+                        case "5":
+                            temp += "${stat.pushoverErrorMsg5}"
+                            break
+                        case "7":
+                            temp += " ${state.pushoverErrorMsg7}"
+                            break
+                        case "8":
+                            temp += " has a bin error.  Attempting to restart cleaning."
+                            device.resume
+                            pauseExecution(5000)
+                            device.resume
+                            break
+                        case "16":
+                            temp += " ${state.pushoverErrorMsg16}"
+                            break
+                        default:
+                            temp = "${state.roombaName} has an unknown error notReady:${result.data.cleanMissionStatus.notReady}"
+                            break
+                        }
+                        if (pushoverError) {
+                            msg = temp 
+                            status = "error"
+                        }
                     }
                 } else {         
                     status = "idle"
                     state.errors = false
                     if(pushoverStop) msg=state.pushoverStopMsg
                 }
-				break
+			    break
             case "evac":
                 //no-op case to avoid sending "unknown" status notification
                 break
             default:
                 status = "unknown"
                 if(pushoverUnknown) msg="${state.roombaName} is in an unknown state:${result.data.cleanMissionStatus.phase}"
-		}
-        if(debug) log.trace "Before: state.cleaning: '${state.cleaning}'  state.prevcleaning: '${state.prevcleaning}'  state.notified: '${state.notified}'"
-        state.cleaning = status
+		    }
 
-        device.sendEvent(name: "cleanStatus", value: status)
-        if(debug) log.trace "Sending '${status}' to ${device} dashboard tile"
-        device.roombaTile(state.cleaning, result.data.batPct, result.data.cleanMissionStatus.mssnM)
+            if (status != device.currentState('cleanStatus') && debounce && !recheck) {
+                if (logEnable) {
+                    log.info("Status changed and debounce is true, re-checking before updating HE device state.")
+                }
+                updateDevices(true)
+            } else {
+                if(debug) log.trace "Before: state.cleaning: '${state.cleaning}'  state.prevcleaning: '${state.prevcleaning}'  state.notified: '${state.notified}'"
+                state.cleaning = status
 
-        if(!state.notified && !state.cleaning.contains(state.prevcleaning)) {
-            if(msg!=null) {
-                state.notified = true
-                pushNow(msg)
+                device.sendEvent(name: "cleanStatus", value: status)
+                if(debug) log.trace "Sending '${status}' to ${device} dashboard tile"
+                device.roombaTile(state.cleaning, result.data.batPct, result.data.cleanMissionStatus.mssnM)
+
+                if(!state.notified && !state.cleaning.contains(state.prevcleaning)) {
+                    if(msg!=null) {
+                        state.notified = true
+                        pushNow(msg)
+                    }
+                    state.prevcleaning = state.cleaning
+                } else state.notified = false
             }
-            state.prevcleaning = state.cleaning
-        } else state.notified = false
-    }
-    }
-    catch (e) { if(logEnable) log.error "iRobot cloud error.  ${e} "
-                if(logEnable) log.warn "Retrying updating devices in 30 seconds." }                   
+        }
+    } catch (e) {
+        if(logEnable) log.error "iRobot cloud error.  ${e} "
+        if(logEnable) log.warn "Retrying updating devices in 30 seconds." }                   
 }
 
 def pushNow(msg) {
     // If user selects Pushover notifications then send message
 	if (pushovertts) {
-            if (logEnable) log.debug "Sending Pushover message: ${msg}"
-        try {pushoverdevice.deviceNotification("${msg}")}
-        catch (e) {log.error "Pushover device is not selected."}
+        if (logEnable) {
+            log.debug "Sending Pushover message: ${msg}"
+        }
+        try {
+            pushoverdevice.deviceNotification("${msg}")
+        } catch (e) {
+            log.error "Pushover device is not selected."
+        }
 	}
 }
 
@@ -825,7 +835,9 @@ def pushNow(msg) {
 
 def getPresence() {
     def presence = false
-    if(roombaPresence.findAll { it?.currentPresence == "present"}) { presence = true }
+    if(roombaPresence.findAll { it?.currentPresence == "present"}) {
+        presence = true
+    }
     return presence
 }
 
@@ -855,8 +867,10 @@ def presenceHandler(evt) {
             state.presence = false
         
             // Dock Roomba if presence is true and roombaPresenceDock is true
-            if(presence && result.data.cleanMissionStatus.phase.contains("run") && roombaPresenceDock) {
-                if(logEnable) log.info "Docking ${state.roombaName} based on presence options"
+            if (presence && result.data.cleanMissionStatus.phase.contains("run") && roombaPresenceDock) {
+                if (logEnable) {
+                    log.info "Docking ${state.roombaName} based on presence options"
+                }
                 state.startDelayTime = null
                 state.schedDelay = false   
                 device.dock()
@@ -864,14 +878,16 @@ def presenceHandler(evt) {
             } 
         
             // Reset restriction switch based on presence away and turnoffSwitch is true
-            if(!presence && turnoffSwitch && restrictbySwitch.currentState("switch").value == "on") {
+            if (!presence && turnoffSwitch && restrictbySwitch.currentState("switch").value == "on") {
                 log.info "Restriction switch '${restrictbySwitch.displayName} is ${restrictbySwitch.currentState("switch").value}.  Presence away, turning off ${restrictbySwitch.displayName}"
                 restrictbySwitch.off
             }
 
             // If roombaPresenceClean is true start cleaning based on a delay
-            if(!presence && roombaPresenceClean && result.data.cleanMissionStatus.phase.contains("charge") || result.data.cleanMissionStatus.phase.contains("stop")) {
-                if(logEnable) log.info "Presence cleaning option is selected AND presence has departed."
+            if (!presence && roombaPresenceClean && result.data.cleanMissionStatus.phase.contains("charge") || result.data.cleanMissionStatus.phase.contains("stop")) {
+                if (logEnable) {
+                    log.info "Presence cleaning option is selected AND presence has departed."
+                }
                 state.presence = true
                 state.startDelayTime = null
                 state.schedDelay = false   
@@ -880,32 +896,37 @@ def presenceHandler(evt) {
             
             // if RoombaPresenceDelay is true start cleaning based if presence departs and cleaning schedule still valid
             if(!presence && roombaPresenceDelay && state.schedDelay) {
-                if(logEnable) log.info "RoombaPresenceDelay is true AND presence has departed."
-                    state.schedDelay = false  
-                    state.startDelayTime = null
-                    device.on() 
-                    RoombaScheduler(false) 
+                if (logEnable) {
+                    log.info "RoombaPresenceDelay is true AND presence has departed."
+                }
+                state.schedDelay = false  
+                state.startDelayTime = null
+                device.on() 
+                RoombaScheduler(false) 
             }    
 
             //update status of Roomba
             updateDevices()
         }
-    } 
-catch (e) { log.error "iRobot communication error. ${e}" }
+    } catch (e) {
+        log.error "iRobot communication error. ${e}"
+    }
 }
 
 def getContacts() {
     def contacts = false
-    if(restrictbyContact.findAll { it?.currentContact == "open"}) { contacts = true }
+    if(restrictbyContact.findAll { it?.currentContact == "open"}) {
+        contacts = true
+    }
     return contacts
 }
 
 def handleDevice(device, id, evt, inputRooms=[:]) {
     try {
-    def restrict = (modesYes && ((restrictbySwitch !=null && restrictbySwitch.currentState("switch").value == "on") || (restrictbyContact !=null && getContacts())) ) ? true : false
-    def device_result = executeAction("/api/local/info/state")
-    def result = ""
-    switch(evt) {
+        def restrict = (modesYes && ((restrictbySwitch !=null && restrictbySwitch.currentState("switch").value == "on") || (restrictbyContact !=null && getContacts())) ) ? true : false
+        def device_result = executeAction("/api/local/info/state")
+        def result = ""
+        switch(evt) {
         case "stop":
             result = executeAction("/api/local/action/stop")
             break
