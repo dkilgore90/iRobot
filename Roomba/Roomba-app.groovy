@@ -426,12 +426,16 @@ def pageroombaNotify() {
 def getRoombaSchedule() {
     def roombaSchedule = []
     for(i=0; i <timeperday.toInteger(); i++) {
-        def nextEntry = [:]
-        nextEntry.time = Date.parse("yyyy-MM-dd'T'HH:mm:ss", app."day${i}").format('HH:mm')
-        if (app."rooms${i}") {
-            nextEntry.rooms = new JsonSlurper().parseText(app."rooms${i}")
-        }
-        roombaSchedule.add(nextEntry)                      
+        roombaSchedule.add([
+            time: Date.parse("yyyy-MM-dd'T'HH:mm:ss", app."day${i}").format('HH:mm')
+            rooms: app."rooms${i}"
+        ])
+        //def nextEntry = [:]
+        //nextEntry.time = Date.parse("yyyy-MM-dd'T'HH:mm:ss", app."day${i}").format('HH:mm')
+        //if (app."rooms${i}") {
+        //    nextEntry.rooms = new JsonSlurper().parseText(app."rooms${i}")
+        //}
+        //roombaSchedule.add(nextEntry)                      
     }
     state.roombaSchedule = roombaSchedule.sort({a, b -> a.time <=> b.time})
 }
@@ -462,6 +466,8 @@ def RoombaScheduler(delayday) {
     foundschedule=false
     def cleaningday = day
     nextcleaning = state.roombaSchedule[0]
+    log.debug("time: ${nextcleaning.time}")
+    log.debug("rooms: ${nextcleaning.rooms}")
     // Check if we clean today
     if(delayday) {
         tempday = day
@@ -516,7 +522,7 @@ def RoombaScheduler(delayday) {
     schedule("0 ${Date.parse("HH:mm", nextcleaning.time).format('mm H')} ? * ${cleaningday} *", RoombaSchedStart, [data: nextcleaning.rooms]) 
 }
 
-def RoombaSchedStart(Map rooms = [:]) {
+def RoombaSchedStart(rooms = '') {
     def result = executeAction("/api/local/info/state")
     def device = getChildDevice("roomba:" + result.data.name)
     def presence = getPresence()
@@ -537,7 +543,7 @@ def RoombaSchedStart(Map rooms = [:]) {
             long temp = now.getTime()
             state.startDelayTime = temp
             state.schedDelay = true
-            runIn(60,RoombaDelay,[data:rooms])
+            runIn(60, RoombaDelay, [data: rooms])
             RoombaScheduler(false)
         } else { 
             if(state.startDelayTime==null || state.startDelayTime == "") { 
@@ -554,7 +560,7 @@ def RoombaSchedStart(Map rooms = [:]) {
     	        timeDiff = Math.round(timeDiff/60)
                 if(logEnable) log.debug "Time delay difference is currently: ${timeDiff.toString()} of ${timer} minute(s)"
                 if(timeDiff <= timer.toInteger()-1) {
-                    runIn(60,RoombaDelay,[data:rooms])
+                    runIn(60,RoombaDelay,[data: rooms])
                 } else {
                     if(roombaDelayDay && state.DaysSinceLastCleaning.toInteger()>roombaaftertimeday.toInteger()-1) {
                         RoombaScheduler(true)
@@ -577,7 +583,7 @@ def RoombaSchedStart(Map rooms = [:]) {
         if(debug) log.debug "RoombaDelay or Immediate Presence values false...starting Roomba normal cleaning schedule"
         if(logEnable) "Starting Roomba normal cleaning schedule"
         if (rooms) {
-            device.cleanRooms(rooms)
+            device.cleanRoom(rooms)
         } else {
             device.on()
         }
@@ -586,7 +592,7 @@ def RoombaSchedStart(Map rooms = [:]) {
     }
 }
 
-def RoombaDelay(Map rooms = [:]) {
+def RoombaDelay(rooms = '') {
     RoombaSchedStart(rooms)
 }
                
