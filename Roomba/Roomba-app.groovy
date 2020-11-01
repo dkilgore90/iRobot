@@ -427,7 +427,7 @@ def getRoombaSchedule() {
     def roombaSchedule = []
     for(i=0; i <timeperday.toInteger(); i++) {
         roombaSchedule.add([
-            time: Date.parse("yyyy-MM-dd'T'HH:mm:ss", app."day${i}").format('HH:mm')
+            time: Date.parse("yyyy-MM-dd'T'HH:mm:ss", app."day${i}").format('HH:mm'),
             rooms: app."rooms${i}"
         ])
         //def nextEntry = [:]
@@ -518,7 +518,8 @@ def RoombaScheduler(delayday) {
             }
         }
     }
-    log.info "Next scheduled cleaning: ${weekday} at ${Date.parse("HH:mm", nextcleaning.time).format('h:mm a')}" 
+    def defaultString = 'default'
+    log.info "Next scheduled cleaning: ${weekday} at ${Date.parse("HH:mm", nextcleaning.time).format('h:mm a')}, rooms: ${nextcleaning.rooms ?: defaultString}" 
     schedule("0 ${Date.parse("HH:mm", nextcleaning.time).format('mm H')} ? * ${cleaningday} *", RoombaSchedStart, [data: nextcleaning.rooms]) 
 }
 
