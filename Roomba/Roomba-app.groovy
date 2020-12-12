@@ -570,7 +570,11 @@ def RoombaSchedStart(rooms = '') {
                         if(roombaDelayDay) log.debug "Delay time has expired, skip cleaning is selected due to presence is home.  Current days since last cleaning: ${state.DaysSinceLastCleaning}"
                         else { 
                             log.info "Delay time has expired.  Starting expired cleaning schedule"
-                            device.on()
+                            if (rooms) {
+                                device.cleanRoom(rooms)
+                            } else {
+                                device.on()
+                            }
                         }
                     }
                     updateDevices()
