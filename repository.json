@@ -1,6 +1,6 @@
 {
    "author": "David Kilgore",
-   "gitHubUrl": "https://github.com/dkilgore90/iRobot",\
+   "gitHubUrl": "https://github.com/dkilgore90/iRobot",
    "packages": [
    	{
    		"name": "iRobot Scheduler",

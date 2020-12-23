@@ -30,7 +30,9 @@
  *
  *  Changes:
  * 
+ *   1.2.0 - add "regions" JSON arg for cleanRoom command, for use with schedules or RM
  *   1.1.7 - add cleanRoom command and option to use local files for dashboard tiles
+ *   ======= Previous development by Aaron Ward
  *   1.1.6 - fixed CSS layout for smartly dashboards
  *   1.1.5 - removed AppWatchDog
  *   1.1.4 - Roomba driver backup of failed application scheduled events
@@ -50,7 +52,7 @@
  *   1.0.0 - Inital concept from Dominick Meglio
 **/
 metadata {
-    definition (name: "Roomba", namespace: "roomba", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy") {
+    definition (name: "Roomba", namespace: "dkilgore90", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy") {
 		capability "Battery"
 		capability "Actuator"
         capability "Switch"
