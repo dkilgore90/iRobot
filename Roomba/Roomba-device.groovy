@@ -30,7 +30,9 @@
  *
  *  Changes:
  * 
+ *   1.2.0 - add "regions" JSON arg for cleanRoom command, for use with schedules or RM
  *   1.1.7 - add cleanRoom command and option to use local files for dashboard tiles
+ *   ======= Previous development by Aaron Ward
  *   1.1.6 - fixed CSS layout for smartly dashboards
  *   1.1.5 - removed AppWatchDog
  *   1.1.4 - Roomba driver backup of failed application scheduled events
@@ -50,9 +52,9 @@
  *   1.0.0 - Inital concept from Dominick Meglio
 **/
 metadata {
-    definition (name: "Roomba", namespace: "roomba", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy") {
-		capability "Battery"
-		capability "Actuator"
+    definition (name: "Roomba", namespace: "dkilgore90", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy") {
+        capability "Battery"
+        capability "Actuator"
         capability "Switch"
         
         attribute "cleanStatus", "string"
@@ -64,7 +66,7 @@ metadata {
         command "pause"
         command "resume"
         command "dock"
-        command "cleanRoom"
+        command "cleanRoom", [[name: "Regions", type: "JSON_OBJECT"]]
     }
     preferences() {
         input("logEnable", "bool", title: "Enable logging", required: true, defaultValue: true)
@@ -104,8 +106,9 @@ def dock() {
     sendEvent(name: "switch", value: "off", isStateChange: true)
 }
 
-def cleanRoom() {
-    parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "cleanRoom")
+def cleanRoom(regions='{}') {
+    def inputRooms = new JsonSlurper().parseText(regions)
+    parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "cleanRoom", inputRooms)
     if(logEnable) log.debug "Roomba is cleaning selected rooms through driver"
     def date = new Date()
     def sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa")
@@ -134,13 +137,13 @@ def timecheck() {
         runIn(60, timecheck)
     } else {
         long timeDiff
-   		def now = new Date()
-    	long unxNow = now.getTime()
-    	unxPrev = state.starttime
-    	unxNow = unxNow/1000
-    	unxPrev = unxPrev/1000
-    	timeDiff = Math.abs(unxNow-unxPrev)
-    	timeDiff = Math.round(timeDiff/60)  
+        def now = new Date()
+        long unxNow = now.getTime()
+        unxPrev = state.starttime
+        unxNow = unxNow/1000
+        unxPrev = unxPrev/1000
+        timeDiff = Math.abs(unxNow-unxPrev)
+        timeDiff = Math.round(timeDiff/60)  
         if(logEnable) "Driver has not had any communication from parent in ${timeDiff} minute(s)"
         if(timeDiff > 5) { 
             parent.initialize()
@@ -206,4 +209,5 @@ def roombaTile(cleaning, batterylevel, cleaningTime) {
     if(logEnable) log.debug "Roomba Status of '${msg}' sent to dashboard"
 }
 
+import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
