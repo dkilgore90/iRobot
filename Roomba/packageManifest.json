@@ -8,24 +8,24 @@
     "documentationLink": "https://github.com/dkilgore90/iRobot/blob/master/Roomba/README.md",
     "communityLink": "https://community.hubitat.com/t/release-irobot-scheduler/22873",
     "apps" : [
-   	    {
-   	        "id" : "14d00d83-9eb1-47f2-87ed-07bc81b39f34",
-   	        "name": "iRobot Scheduler",
+        {
+            "id" : "14d00d83-9eb1-47f2-87ed-07bc81b39f34",
+            "name": "iRobot Scheduler",
             "namespace": "dkilgore90",
-   	        "location": "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-app.groovy",
-   	        "required": true,
-   	        "oauth": false,
+            "location": "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-app.groovy",
+            "required": true,
+            "oauth": false,
             "version": "1.4.0"
-   	    }
+        }
     ],
     "drivers" : [
-       	{
-       	    "id": "ee4f2c21-6ec9-455b-b426-2276c1e84fe8",
-           	"name": "Roomba",
+        {
+            "id": "ee4f2c21-6ec9-455b-b426-2276c1e84fe8",
+            "name": "Roomba",
             "namespace": "dkilgore90",
-   	        "location": "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy",
-    	    "required": true,
+            "location": "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy",
+            "required": true,
             "version": "1.2.0"
-   	    }
+        }
     ]
 }

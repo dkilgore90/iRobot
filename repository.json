@@ -1,12 +1,12 @@
 {
-   "author": "David Kilgore",
-   "gitHubUrl": "https://github.com/dkilgore90/iRobot",
-   "packages": [
-   	{
-   		"name": "iRobot Scheduler",
-   		"category": "Integrations",
-   		"location": "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/packageManifest.json",
-   		"description": "iRobot Scheduler is an application and device that enables local execution and scheduling of Roomba and Brava cleaning tasks in assistance with a Raspberry Pi running Dorita980 and Rest980. This application and device works with ALL WiFi enabled Roomba and Braava devices."
-   	}      
-   ]
+    "author": "David Kilgore",
+    "gitHubUrl": "https://github.com/dkilgore90/iRobot",
+    "packages": [
+        {
+            "name": "iRobot Scheduler",
+            "category": "Integrations",
+            "location": "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/packageManifest.json",
+            "description": "iRobot Scheduler is an application and device that enables local execution and scheduling of Roomba and Brava cleaning tasks in assistance with a Raspberry Pi running Dorita980 and Rest980. This application and device works with ALL WiFi enabled Roomba and Braava devices."
+        }      
+    ]
 }

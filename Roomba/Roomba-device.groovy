@@ -53,8 +53,8 @@
 **/
 metadata {
     definition (name: "Roomba", namespace: "dkilgore90", author: "Aaron Ward", importUrl: "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-device.groovy") {
-		capability "Battery"
-		capability "Actuator"
+        capability "Battery"
+        capability "Actuator"
         capability "Switch"
         
         attribute "cleanStatus", "string"
@@ -137,13 +137,13 @@ def timecheck() {
         runIn(60, timecheck)
     } else {
         long timeDiff
-   		def now = new Date()
-    	long unxNow = now.getTime()
-    	unxPrev = state.starttime
-    	unxNow = unxNow/1000
-    	unxPrev = unxPrev/1000
-    	timeDiff = Math.abs(unxNow-unxPrev)
-    	timeDiff = Math.round(timeDiff/60)  
+        def now = new Date()
+        long unxNow = now.getTime()
+        unxPrev = state.starttime
+        unxNow = unxNow/1000
+        unxPrev = unxPrev/1000
+        timeDiff = Math.abs(unxNow-unxPrev)
+        timeDiff = Math.round(timeDiff/60)  
         if(logEnable) "Driver has not had any communication from parent in ${timeDiff} minute(s)"
         if(timeDiff > 5) { 
             parent.initialize()
