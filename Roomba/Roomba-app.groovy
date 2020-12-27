@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.1 - fix namespace bug when creating child device
  *   1.4.0 - add ability to specify "rooms"/"regions" JSON in schedules
  *   1.3.7 - add cleanRooms functionality, and associated options for i7/s9 devices.  Add option to use local files for dashboard tiles
  *   ======= Previous development by Aaron Ward
@@ -611,7 +612,7 @@ def createChildDevices() {
 
         if (result && result.data) {
             if (!getChildDevice("roomba:"+result.data.name)) {
-                addChildDevice("roomba", "Roomba", "roomba:" + result.data.name, 1234, ["name": result.data.name, isComponent: false])
+                addChildDevice("dkilgore90", "Roomba", "roomba:" + result.data.name, 1234, ["name": result.data.name, isComponent: false])
             }
         }
     } catch (e) {
