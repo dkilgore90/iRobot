@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.2 - fix bug #8 -- Infinite loop if only schedule is on Sunday
  *   1.4.1 - fix namespace bug when creating child device
  *   1.4.0 - add ability to specify "rooms"/"regions" JSON in schedules
  *   1.3.7 - add cleanRooms functionality, and associated options for i7/s9 devices.  Add option to use local files for dashboard tiles
@@ -70,7 +71,7 @@
  *   1.0.0 - Inital concept from Dominick Meglio
 **/
 def version() {
-    version = "1.3.7"
+    version = "1.4.2"
     return version
 }
 
@@ -476,7 +477,7 @@ def RoombaScheduler(delayday) {
         tempday = day
         while(!foundschedule) {
             tempday = tempday + 1
-            if(tempday>7) { tempday=1 }
+            if(tempday>6) { tempday=0 }
             if(!restricteddaysofweek.contains(tempday.toString())) { 
                 foundschedule=true
                 cleaningday = map2[tempday]
@@ -500,7 +501,7 @@ def RoombaScheduler(delayday) {
             tempday = day
             while(!foundschedule) {
                 tempday = tempday + 1
-                if(tempday>7) { tempday=1 }
+                if(tempday>6) { tempday=0 }
                 if(daysofweek.contains(tempday.toString())) { 
                     foundschedule=true
                     cleaningday = map2[tempday]
@@ -513,7 +514,7 @@ def RoombaScheduler(delayday) {
         tempday = day
         while(!foundschedule) {
             tempday = tempday + 1
-            if(tempday>7) { tempday=1 }
+            if(tempday>6) { tempday=0 }
             if(daysofweek.contains(tempday.toString())) { 
                 foundschedule=true
                 cleaningday = map2[tempday]
