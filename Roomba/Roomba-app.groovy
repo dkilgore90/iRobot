@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.3 - #9 -- derive mission time using mssnStrtTm if mssnM is 0. Bugfix in debounce handling.
  *   1.4.2 - fix bug #8 -- Infinite loop if only schedule is on Sunday
  *   1.4.1 - fix namespace bug when creating child device
  *   1.4.0 - add ability to specify "rooms"/"regions" JSON in schedules
@@ -71,7 +72,7 @@
  *   1.0.0 - Inital concept from Dominick Meglio
 **/
 def version() {
-    version = "1.4.2"
+    version = "1.4.3"
     return version
 }
 
@@ -377,7 +378,10 @@ def pageroombaInfo() {
         temp += "<p style=font-size:20px><b>Roomba MAC:</b> ${result.data.hwPartsRev?.wlan0HwAddr}</p>"
     temp += "<p style=font-size:20px><b>Software Version:</b> ${result.data.softwareVer}</p>"
     temp += "<p style=font-size:20px><b>Current State:</b> ${msg}</p>"
-    if(cleantime) temp += "<p style=font-size:20px><b>Elapsed Time:</b> ${result.data.cleanMissionStatus.mssnM} minutes</p>"
+    if(cleantime) {
+        missionTime = getMissionTime(result.data.cleanMissionStatus)
+        temp += "<p style=font-size:20px><b>Elapsed Time:</b> ${missionTime} minutes</p>"
+    }
     temp += "<p style=font-size:20px><b>Battery Status:</b> ${result.data.batPct}%"
     if (result.data.bin != null)
         temp += "<p style=font-size:20px><b>Bin Status:</b> ${bin}"
@@ -736,7 +740,9 @@ def updateDevices(recheck=false) {
                 if(pushoverStart) msg=state.pushoverStartMsg
                 state.batterydead = false
                 //control Roomba docking based on Time or Battery %
-                if(useTime && roombaTime.toInteger() >= result.data.cleanMissionStatus.mssnM.toInteger()) {
+                if(useTime) {
+                    missionTime = getMissionTime(result.data.cleanMissionStatus)
+                    if (roombaTime.toInteger() >= missionTime) {
                     device.dock()
                 }
                 if(useBattery && roombaBattery.toInteger() >= result.data.batPct.toInteger()) {
@@ -817,9 +823,9 @@ def updateDevices(recheck=false) {
                 if(pushoverUnknown) msg="${state.roombaName} is in an unknown state:${result.data.cleanMissionStatus.phase}"
             }
 
-            if (status != device.currentState('cleanStatus') && debounce && !recheck) {
+            if (status != device.currentValue('cleanStatus') && debounce && !recheck) {
                 if (logEnable) {
-                    log.info("Status changed and debounce is true, re-checking before updating HE device state.")
+                    log.info("Status changed -- was: ${device.currentValue('cleanStatus')}, now: ${status} -- and debounce is true, re-checking before updating HE device state.")
                 }
                 updateDevices(true)
             } else {
@@ -828,7 +834,8 @@ def updateDevices(recheck=false) {
 
                 device.sendEvent(name: "cleanStatus", value: status)
                 if(debug) log.trace "Sending '${status}' to ${device} dashboard tile"
-                device.roombaTile(state.cleaning, result.data.batPct, result.data.cleanMissionStatus.mssnM)
+                missionTime = getMissionTime(result.data.cleanMissionStatus)
+                device.roombaTile(state.cleaning, result.data.batPct, missionTime)
 
                 if(!state.notified && !state.cleaning.contains(state.prevcleaning)) {
                     if(msg!=null) {
@@ -859,6 +866,17 @@ def pushNow(msg) {
 }
 
 // Handlers
+
+def getMissionTime(cleanMissionStatus) {
+    if (cleanMissionStatus.mssnM == 0 && cleanMissionStatus.mssnStrtTm != null) {
+        now = new Date()
+        missionTime = Math.round(((now.getTime() / 1000) - cleanMissionStatus.mssnStrtTm) / 60)
+        return missionTime
+    } else {
+        return cleanMissionStatus.mssnM
+    }
+
+}
 
 def getPresence() {
     def presence = false
