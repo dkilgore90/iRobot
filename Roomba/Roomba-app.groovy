@@ -27,7 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
- *   1.4.3 - #9 -- derive mission time using mssnStrtTm if mssnM is 0
+ *   1.4.3 - #9 -- derive mission time using mssnStrtTm if mssnM is 0. Bugfix in debounce handling.
  *   1.4.2 - fix bug #8 -- Infinite loop if only schedule is on Sunday
  *   1.4.1 - fix namespace bug when creating child device
  *   1.4.0 - add ability to specify "rooms"/"regions" JSON in schedules
@@ -823,9 +823,9 @@ def updateDevices(recheck=false) {
                 if(pushoverUnknown) msg="${state.roombaName} is in an unknown state:${result.data.cleanMissionStatus.phase}"
             }
 
-            if (status != device.currentState('cleanStatus') && debounce && !recheck) {
+            if (status != device.currentValue('cleanStatus') && debounce && !recheck) {
                 if (logEnable) {
-                    log.info("Status changed and debounce is true, re-checking before updating HE device state.")
+                    log.info("Status changed -- was: ${device.currentValue('cleanStatus')}, now: ${status} -- and debounce is true, re-checking before updating HE device state.")
                 }
                 updateDevices(true)
             } else {
