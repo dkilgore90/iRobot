@@ -15,7 +15,7 @@
             "location": "https://raw.githubusercontent.com/dkilgore90/iRobot/master/Roomba/Roomba-app.groovy",
             "required": true,
             "oauth": false,
-            "version": "1.4.3"
+            "version": "1.4.4"
         }
     ],
     "drivers" : [
