@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.4 - bug fix: install error on 1.4.3
  *   1.4.3 - #9 -- derive mission time using mssnStrtTm if mssnM is 0. Bugfix in debounce handling.
  *   1.4.2 - fix bug #8 -- Infinite loop if only schedule is on Sunday
  *   1.4.1 - fix namespace bug when creating child device
@@ -743,7 +744,8 @@ def updateDevices(recheck=false) {
                 if(useTime) {
                     missionTime = getMissionTime(result.data.cleanMissionStatus)
                     if (roombaTime.toInteger() >= missionTime) {
-                    device.dock()
+                        device.dock()
+                    }
                 }
                 if(useBattery && roombaBattery.toInteger() >= result.data.batPct.toInteger()) {
                     device.dock()
