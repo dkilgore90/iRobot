@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.5 - bugfix: maintain previous Roomba name in App if it cannot be retrieved 
  *   1.4.4 - bug fix: install error on 1.4.3
  *   1.4.3 - #9 -- derive mission time using mssnStrtTm if mssnM is 0. Bugfix in debounce handling.
  *   1.4.2 - fix bug #8 -- Infinite loop if only schedule is on Sunday
@@ -73,7 +74,7 @@
  *   1.0.0 - Inital concept from Dominick Meglio
 **/
 def version() {
-    version = "1.4.3"
+    version = "1.4.5"
     return version
 }
 
@@ -1106,7 +1107,7 @@ def setStateVariables() {
    pushoverErrorMsg7="cleaning bin is missing"
    pushoverErrorMsg16="stuck on an object"
     try { state.roombaName = result.data.name}
-        catch (e) {state.roombaName = "RoombaUnknown"}
+        catch (e) {state.roombaName = state.roombaName ?: "RoombaUnknown"}
     try {state.pushoverStartMsg = pushoverStartMsg.replace("%device%",state.roombaName)}
         catch (e) {state.pushoverStartMsg = pushoverStartMsg}
     try {state.pushoverStopMsg = pushoverStopMsg.replace("%device%",state.roombaName)}
