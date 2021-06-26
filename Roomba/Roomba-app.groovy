@@ -915,7 +915,9 @@ def presenceHandler(evt) {
             state.presence = false
         
             // Dock Roomba if presence is true and roombaPresenceDock is true
-            if (presence && result.data.cleanMissionStatus.phase.contains("run") && roombaPresenceDock) {
+            if (presence && roombaPresenceDock && (
+                    result.data.cleanMissionStatus.phase.contains("run") || 
+                    (result.data.cleanMissionStatus.phase.contains("charge") && result.data.cleanMissionStatus.cycle.contains("clean"))) {
                 if (logEnable) {
                     log.info "Docking ${state.roombaName} based on presence options"
                 }
