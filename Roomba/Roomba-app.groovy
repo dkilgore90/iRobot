@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.6 - bugfix: terminate cleaning cycle when presence arrives, even if already on dock
  *   1.4.5 - bugfix: maintain previous Roomba name in App if it cannot be retrieved 
  *   1.4.4 - bug fix: install error on 1.4.3
  *   1.4.3 - #9 -- derive mission time using mssnStrtTm if mssnM is 0. Bugfix in debounce handling.
@@ -915,7 +916,9 @@ def presenceHandler(evt) {
             state.presence = false
         
             // Dock Roomba if presence is true and roombaPresenceDock is true
-            if (presence && result.data.cleanMissionStatus.phase.contains("run") && roombaPresenceDock) {
+            if (presence && roombaPresenceDock && (
+                    result.data.cleanMissionStatus.phase.contains("run") || 
+                    (result.data.cleanMissionStatus.phase.contains("charge") && result.data.cleanMissionStatus.cycle.contains("clean"))) {
                 if (logEnable) {
                     log.info "Docking ${state.roombaName} based on presence options"
                 }
