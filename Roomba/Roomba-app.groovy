@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.7 - bugfix: missing parentheses on line 921
  *   1.4.6 - bugfix: terminate cleaning cycle when presence arrives, even if already on dock
  *   1.4.5 - bugfix: maintain previous Roomba name in App if it cannot be retrieved 
  *   1.4.4 - bug fix: install error on 1.4.3
@@ -918,7 +919,7 @@ def presenceHandler(evt) {
             // Dock Roomba if presence is true and roombaPresenceDock is true
             if (presence && roombaPresenceDock && (
                     result.data.cleanMissionStatus.phase.contains("run") || 
-                    (result.data.cleanMissionStatus.phase.contains("charge") && result.data.cleanMissionStatus.cycle.contains("clean"))) {
+                    (result.data.cleanMissionStatus.phase.contains("charge") && result.data.cleanMissionStatus.cycle.contains("clean")))) {
                 if (logEnable) {
                     log.info "Docking ${state.roombaName} based on presence options"
                 }
