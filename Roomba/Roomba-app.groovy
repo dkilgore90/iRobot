@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.8 - handle rooms == 'null' (string) the same as an actual null value
  *   1.4.7 - bugfix: missing parentheses on line 921
  *   1.4.6 - bugfix: terminate cleaning cycle when presence arrives, even if already on dock
  *   1.4.5 - bugfix: maintain previous Roomba name in App if it cannot be retrieved 
@@ -582,7 +583,7 @@ def RoombaSchedStart(rooms = '') {
                         if(roombaDelayDay) log.debug "Delay time has expired, skip cleaning is selected due to presence is home.  Current days since last cleaning: ${state.DaysSinceLastCleaning}"
                         else { 
                             log.info "Delay time has expired.  Starting expired cleaning schedule"
-                            if (rooms) {
+                            if (rooms && rooms != 'null') {
                                 device.cleanRoom(rooms)
                             } else {
                                 device.on()
@@ -599,7 +600,7 @@ def RoombaSchedStart(rooms = '') {
     } else { // Delay cleaning is not selected
         if(debug) log.debug "RoombaDelay or Immediate Presence values false...starting Roomba normal cleaning schedule"
         if(logEnable) "Starting Roomba normal cleaning schedule"
-        if (rooms) {
+        if (rooms && rooms != null) {
             device.cleanRoom(rooms)
         } else {
             device.on()
@@ -1012,7 +1013,7 @@ def handleDevice(device, id, evt, inputRooms=[:]) {
             break
         case "cleanRoom":
             if(!restrict) {
-                if (!roombaDefaultRooms || roombaDefaultRooms == "")
+                if ((!roombaDefaultRooms || roombaDefaultRooms == "") && !inputRooms)
                     { log.warn "${device} has no defined rooms to clean.  Use 'start' to clean all or define 'default rooms'." }
                 else if (device_result.data.cleanMissionStatus.phase.contains("run") || device_result.data.cleanMissionStatus.phase.contains("hmUsrDock")) 
                     { log.warn "${device} was currently cleaning.  Scheduled times may be too close together." }
