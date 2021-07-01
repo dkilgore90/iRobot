@@ -1012,7 +1012,7 @@ def handleDevice(device, id, evt, inputRooms=[:]) {
             break
         case "cleanRoom":
             if(!restrict) {
-                if (!roombaDefaultRooms || roombaDefaultRooms == "")
+                if ((!roombaDefaultRooms || roombaDefaultRooms == "") && !inputRooms)
                     { log.warn "${device} has no defined rooms to clean.  Use 'start' to clean all or define 'default rooms'." }
                 else if (device_result.data.cleanMissionStatus.phase.contains("run") || device_result.data.cleanMissionStatus.phase.contains("hmUsrDock")) 
                     { log.warn "${device} was currently cleaning.  Scheduled times may be too close together." }
