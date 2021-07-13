@@ -479,8 +479,6 @@ def RoombaScheduler(delayday) {
     foundschedule=false
     def cleaningday = day
     nextcleaning = state.roombaSchedule[0]
-    log.debug("time: ${nextcleaning.time}")
-    log.debug("rooms: ${nextcleaning.rooms}")
     // Check if we clean today
     if(delayday) {
         tempday = day
@@ -543,9 +541,9 @@ def RoombaSchedStart(rooms = '') {
     
     
     // If Delay cleaning is selected
-    if(debug) log.debug "Current variables:  roombaPresenceDelay: ${roombaPresenceDelay} - presence: ${presence} - state.presence: ${state.presence}"
+    if(logEnable) log.debug "Current variables:  roombaPresenceDelay: ${roombaPresenceDelay} - presence: ${presence} - state.presence: ${state.presence} - rooms: ${rooms}"
     if(((roombaPresenceDelay && presence) || state.presence) && (roombaIgnorePresenceSwitch == null || roombaIgnorePresenceSwitch.currentValue("switch") == "off")) {
-        if(debug) log.debug "roomba PresenceDelay or Presence leave values equal true"
+        if(logEnable) log.debug "roomba PresenceDelay or Presence leave values equal true"
         
         if(state.presence==true) timer = roombaPresenceCleandelay
         else timer = roombaPresenceDelayTime 
@@ -584,8 +582,10 @@ def RoombaSchedStart(rooms = '') {
                         else { 
                             log.info "Delay time has expired.  Starting expired cleaning schedule"
                             if (rooms && rooms != 'null') {
+                                if(logEnable) log.debug "Triggering 'cleanRoom' from schedule with rooms: '${rooms}'"
                                 device.cleanRoom(rooms)
                             } else {
+                                if(logEnable) log.debug "Triggering 'on' from schedule"
                                 device.on()
                             }
                         }
@@ -598,11 +598,13 @@ def RoombaSchedStart(rooms = '') {
             }
         }
     } else { // Delay cleaning is not selected
-        if(debug) log.debug "RoombaDelay or Immediate Presence values false...starting Roomba normal cleaning schedule"
-        if(logEnable) "Starting Roomba normal cleaning schedule"
+        if(logEnable) log.debug "RoombaDelay or Immediate Presence values false...starting Roomba normal cleaning schedule"
+        log.info "Starting Roomba normal cleaning schedule"
         if (rooms && rooms != null) {
+            if(logEnable) log.debug "Triggering 'cleanRoom' from schedule with rooms: '${rooms}'"
             device.cleanRoom(rooms)
         } else {
+            if(logEnable) log.debug "Triggering 'on' from schedule"
             device.on()
         }
         updateDevices() 
