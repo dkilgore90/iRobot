@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.9 - add debug logs for enhanced tracking of scheduled actions
  *   1.4.8 - handle rooms == 'null' (string) the same as an actual null value
  *   1.4.7 - bugfix: missing parentheses on line 921
  *   1.4.6 - bugfix: terminate cleaning cycle when presence arrives, even if already on dock
