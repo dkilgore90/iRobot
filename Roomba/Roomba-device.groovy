@@ -30,6 +30,7 @@
  *
  *  Changes:
  * 
+ *   1.2.1 - set attributes and remove 'isStateChange: true' from events, to reduce event noise within the hub when no changes occur
  *   1.2.0 - add "regions" JSON arg for cleanRoom command, for use with schedules or RM
  *   1.1.7 - add cleanRoom command and option to use local files for dashboard tiles
  *   ======= Previous development by Aaron Ward
@@ -60,6 +61,8 @@ metadata {
         attribute "cleanStatus", "string"
         attribute "RoombaTile", "string"
         attribute "Last Activity", "string"
+        attribute "bin", "string"
+        attribute "tank", "string"
 
         command "start"
         command "stop"
@@ -78,32 +81,32 @@ def start() {
     if(logEnable) log.debug "Roomba is being started through driver"
     def date = new Date()
     def sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa")
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-    sendEvent(name: "Last Activity", value: sdf.format(date), isStateChange: true) 
+    sendEvent(name: "switch", value: "on")
+    sendEvent(name: "Last Activity", value: sdf.format(date)) 
 }
 
 def stop() {
     parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "stop")
     if(logEnable) log.debug "Roomba is being stopped through driver"
-    sendEvent(name: "switch", value: "off", isStateChange: true)
+    sendEvent(name: "switch", value: "off")
 }
 
 def pause() {
     parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "pause")
     if(logEnable) log.debug "Roomba is being paused through driver"
-    sendEvent(name: "switch", value: "off", isStateChange: true)
+    sendEvent(name: "switch", value: "off")
 }
 
 def resume() {
     parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "resume")
     if(logEnable) log.debug "Roomba is resuming through driver"
-    sendEvent(name: "switch", value: "on", isStateChange: true)
+    sendEvent(name: "switch", value: "on")
 }
 
 def dock() {
     parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "dock")
     if(logEnable) log.debug "Roomba is being docked through driver"
-    sendEvent(name: "switch", value: "off", isStateChange: true)
+    sendEvent(name: "switch", value: "off")
 }
 
 def cleanRoom(regions='{}') {
@@ -112,20 +115,20 @@ def cleanRoom(regions='{}') {
     if(logEnable) log.debug "Roomba is cleaning selected rooms through driver"
     def date = new Date()
     def sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa")
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-    sendEvent(name: "Last Activity", value: sdf.format(date), isStateChange: true) 
+    sendEvent(name: "switch", value: "on")
+    sendEvent(name: "Last Activity", value: sdf.format(date)) 
 }
 
 def on() {
     parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "on")
     if(logEnable) log.debug "Roomba on initiated through driver"
-    sendEvent(name: "switch", value: "on", isStateChange: true)
+    sendEvent(name: "switch", value: "on")
 }
 
 def off() {
     parent.handleDevice(device, device.deviceNetworkId.split(":")[1], "off")
     if(logEnable) log.debug "Roomba off initiated through driver"
-    sendEvent(name: "switch", value: "off", isStateChange: true)
+    sendEvent(name: "switch", value: "off")
 }
 
 def timecheck() {
@@ -162,32 +165,32 @@ def roombaTile(cleaning, batterylevel, cleaningTime) {
         case "cleaning":
             img = "roomba-clean.png"
             msg=cleaning.capitalize()
-            sendEvent(name: "switch", value: "on", isStateChange: true)
+            sendEvent(name: "switch", value: "on")
             break
         case "stopped":
             img = "roomba-stop.png"
             msg=cleaning.capitalize()
-            sendEvent(name: "switch", value: "off", isStateChange: true)
+            sendEvent(name: "switch", value: "off")
             break        
         case "charging":
             img = "roomba-charge.png"
             msg=cleaning.capitalize()
-            sendEvent(name: "switch", value: "off", isStateChange: true)
+            sendEvent(name: "switch", value: "off")
             break        
         case "docking":
             img = "roombadock.png"
             msg=cleaning.capitalize()
-            sendEvent(name: "switch", value: "off", isStateChange: true)
+            sendEvent(name: "switch", value: "off")
             break
         case "dead":
             img = "roomba-dead.png"
             msg="Battery Died"
-            sendEvent(name: "switch", value: "off", isStateChange: true)
+            sendEvent(name: "switch", value: "off")
             break
         case "error":
             img = "roomba-error.png"
             msg = cleaning.capitalize()
-            sendEvent(name: "switch", value: "off", isStateChange: true)
+            sendEvent(name: "switch", value: "off")
             break
         case "unknown":
             img = "roomba-unknown.png"
@@ -196,7 +199,7 @@ def roombaTile(cleaning, batterylevel, cleaningTime) {
         default:
             img = "roomba-stop.png"
             msg=cleaning.capitalize()
-            sendEvent(name: "switch", value: "off", isStateChange: true)
+            sendEvent(name: "switch", value: "off")
             break
     }
     def path = parent.getImagePath()
