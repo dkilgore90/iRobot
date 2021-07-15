@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.10 - bugfix: #17 -- roombaOn default is not applied if i7/s9 options are not enabled
  *   1.4.9 - add debug logs for enhanced tracking of scheduled actions
  *   1.4.8 - handle rooms == 'null' (string) the same as an actual null value
  *   1.4.7 - bugfix: missing parentheses on line 921
@@ -1078,10 +1079,10 @@ def handleDevice(device, id, evt, inputRooms=[:]) {
             }
             break
         case "on":
-            if(roombaOn=="start") {
-                device.start()
-            } else {
+            if(roombaOn=="cleanRoom") {
                 device.cleanRoom()
+            } else {
+                device.start()
             }
             break
     }
