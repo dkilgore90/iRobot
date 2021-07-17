@@ -27,6 +27,7 @@
  * ------------------------------------------------------------------------------------------------------------------------------
  *
  *  Changes:
+ *   1.4.11 - bugfix: #21 -- use specified port in map link for 900 series, i7/s9
  *   1.4.10 - bugfix: #17 -- roombaOn default is not applied if i7/s9 options are not enabled
  *   1.4.9 - add debug logs for enhanced tracking of scheduled actions
  *   1.4.8 - handle rooms == 'null' (string) the same as an actual null value
@@ -79,7 +80,7 @@
  *   1.0.0 - Inital concept from Dominick Meglio
 **/
 def version() {
-    version = "1.4.8"
+    version = "1.4.11"
     return version
 }
 
@@ -261,7 +262,7 @@ def mainPage() {
             paragraph "<hr><u>Settings for Roomba 900+ series devices:</u>"
             input "roomba900", "bool", title: "Configure 900+ options?", defaultValue: false, submitOnChange: true
             if(roomba900){
-                paragraph "See ${state.roombaName}'s <a href=http://${doritaIP}:3000/map target=_blank>Cleaning Map</a>"
+                paragraph "See ${state.roombaName}'s <a href=http://${doritaIP}:${doritaPort}/map target=_blank>Cleaning Map</a>"
                 input "roombacarpetBoost", "enum", title: "Select Carpet Boost option:", required: false, multiple: false, defaultValue: "auto", submitOnChange: true,
                 options: [
                     "auto":    "Auto",
@@ -280,6 +281,7 @@ def mainPage() {
             paragraph "<hr><u>Settings for Roomba i7/s9 series devices:</u>"
             input "roombaI7", "bool", title: "Configure i7/s9 options?", defaultValue: false, submitOnChange: true
             if(roombaI7){
+                paragraph "See ${state.roombaName}'s <a href=http://${doritaIP}:${doritaPort}/map target=_blank>Cleaning Map</a>"
                 input "roombaOrderedCleaning", "bool", title: "Enable Ordered Cleaning?", required: false, defaultValue: false, submitOnChange: true
                 input "roombaDefaultRooms", "text", title: "Input default rooms for cleaning", required: false, defaultValue: "", submitOnChange: true
                 input "roombaOn", "enum", title: "Do the following when Roomba's switch is turned 'On'?", defaultValue: "start", required: false, multiple: false, submitOnChange: true,
@@ -604,10 +606,10 @@ def RoombaSchedStart(rooms = '') {
         log.info "Starting Roomba normal cleaning schedule"
         if (rooms && rooms != null) {
             if(logEnable) log.debug "Triggering 'cleanRoom' from schedule with rooms: '${rooms}'"
-            device.cleanRoom(rooms)
+            //device.cleanRoom(rooms)
         } else {
             if(logEnable) log.debug "Triggering 'on' from schedule"
-            device.on()
+            //device.on()
         }
         updateDevices() 
         RoombaScheduler(false)
@@ -1080,9 +1082,11 @@ def handleDevice(device, id, evt, inputRooms=[:]) {
             break
         case "on":
             if(roombaOn=="cleanRoom") {
-                device.cleanRoom()
+                log.info("triggering 'cleanRoom' from 'on'")
+                //device.cleanRoom()
             } else {
-                device.start()
+                log.info("triggering 'start' from 'on'")
+                //device.start()
             }
             break
     }
