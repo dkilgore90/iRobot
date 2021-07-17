@@ -606,10 +606,10 @@ def RoombaSchedStart(rooms = '') {
         log.info "Starting Roomba normal cleaning schedule"
         if (rooms && rooms != null) {
             if(logEnable) log.debug "Triggering 'cleanRoom' from schedule with rooms: '${rooms}'"
-            //device.cleanRoom(rooms)
+            device.cleanRoom(rooms)
         } else {
             if(logEnable) log.debug "Triggering 'on' from schedule"
-            //device.on()
+            device.on()
         }
         updateDevices() 
         RoombaScheduler(false)
